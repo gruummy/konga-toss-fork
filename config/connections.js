@@ -33,40 +33,6 @@ module.exports.connections = {
   },
 
   /**
-   * MySQL is the world's most popular relational database.
-   * http://en.wikipedia.org/wiki/MySQL
-   *
-   * Run:
-   * npm install sails-mysql
-   */
-  mysql: {
-    adapter: 'sails-mysql',
-    url: process.env.DB_URI || null,
-    host: process.env.DB_HOST || 'localhost',
-    port: process.env.DB_PORT || 3306,
-    user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || null,
-    database: process.env.DB_DATABASE || 'konga_database'
-  },
-
-  /**
-   * MongoDB is the leading NoSQL database.
-   * http://en.wikipedia.org/wiki/MongoDB
-   *
-   * Run:
-   * npm install sails-mongo
-   */
-  mongo: {
-    adapter: 'sails-mongo',
-    url: process.env.DB_URI || null,
-    host: process.env.DB_HOST || 'localhost',
-    port: process.env.DB_PORT || 27017,
-    user: process.env.DB_USER ||  null,
-    password: process.env.DB_PASSWORD ||  null,
-    database: process.env.DB_DATABASE ||  'konga_database',
-  },
-
-  /**
    * PostgreSQL is another officially supported relational database.
    * http://en.wikipedia.org/wiki/PostgreSQL
    *
@@ -87,17 +53,24 @@ module.exports.connections = {
   },
 
   /**
-   * More adapters:
-   * https://github.com/balderdashy/sails
+   * ⚠️ DISABLED ADAPTERS (Security - Phase 2)
+   * 
+   * MySQL, MongoDB, and SQL Server adapters have been temporarily disabled
+   * due to security vulnerabilities in their legacy packages.
+   * 
+   * These configurations have been moved to: under-review/{adapter}/
+   * 
+   * Attempting to use these adapters will result in a clear error message.
+   * 
+   * Supported adapters:
+   * - localDiskDb (development only)
+   * - postgres (production)
+   * 
+   * For more information, see: under-review/README.md
    */
 
-  'sqlserver': {
-    adapter: 'sails-sqlserver',
-    url: process.env.DB_URI || null,
-    host: process.env.DB_HOST || 'localhost',
-    user:  process.env.DB_USER || null,
-    password: process.env.DB_PASSWORD || null,
-    port: process.env.DB_PORT || 49150,
-    database: process.env.DB_DATABASE ||'konga_database'
-  },
+  // mysql: DISABLED - see under-review/mysql/README.md
+  // mongo: DISABLED - see under-review/mongodb/README.md
+  // sqlserver: DISABLED - see under-review/sqlserver/README.md
+
 };

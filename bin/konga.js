@@ -50,7 +50,9 @@ else if(argv._[0] === 'prepare') {
   Sails.log("Preparing database...")
 
   if(!process.env.DB_ADAPTER && !argv.adapter) {
-    Sails.log.error("No db adapter defined. Set --adapter {mongo || mysql || postgres || sql-srv}")
+    Sails.log.error("No db adapter defined. Set --adapter {postgres || localDiskDb}");
+    Sails.log.error("Note: mysql, mongo, and sqlserver are currently disabled due to security issues.");
+    Sails.log.error("See under-review/README.md for more information.");
     return process.exit(1);
   }
 
