@@ -12,7 +12,7 @@ var tasks = {}
 var KongService = require('../services/KongService')
 var moment = require('moment')
 var hcmailer = require('nodemailer');
-var mg = require('nodemailer-mailgun-transport');
+// var mg = require('nodemailer-mailgun-transport'); // DISABLED - see under-review/mailgun/
 var notificationsInterval = 15;
 var sendmail = require('sendmail')({
     logger: {
@@ -166,13 +166,19 @@ module.exports = {
                 settings : settings.data,
             }
 
+            // Guard against disabled transports
+            if (settings.data.default_transport === 'mailgun') {
+                sails.log.error('ERROR: Email transport "mailgun" is DISABLED (see under-review/mailgun/README.md)');
+                return cb(new Error('Email transport "mailgun" is disabled. Use smtp or sendmail.'));
+            }
+
             switch(settings.data.default_transport) {
                 case "smtp":
                     result.transporter = hcmailer.createTransport(transport.settings)
                     break;
-                case "mailgun":
-                    result.transporter = hcmailer.createTransport(mg(transport.settings))
-                    break;
+                // case "mailgun": // DISABLED - see under-review/mailgun/
+                //     result.transporter = hcmailer.createTransport(mg(transport.settings))
+                //     break;
             }
 
             return cb(null,result);

@@ -92,34 +92,10 @@ var defaultModel = _.merge(_.cloneDeep(require('../base/Model')), {
             "settings": {
                 sendmail: true
             }
-        },
-        {
-            "name": "mailgun",
-            "description": "Send emails through Mailgun’s Web API",
-            "schema": [
-                {
-                    name: "api_key",
-                    model: "auth.api_key",
-                    description: "The API key that you got from www.mailgun.com/cp",
-                    type: "text",
-                    required: true
-                },
-                {
-                    name: "domain",
-                    model: "auth.domain",
-                    description: "One of your domain names listed at your https://mailgun.com/app/domains",
-                    type: "text",
-                    required: true
-                }
-
-            ],
-            "settings": {
-                auth: {
-                    api_key: '',
-                    domain: ''
-                }
-            }
         }
+        // DISABLED: mailgun transport - see under-review/mailgun/README.md
+        // Reason: Security vulnerabilities in nodemailer-mailgun-transport
+        // Alternative: Use SMTP with Mailgun credentials (smtp.mailgun.org)
     ]
 });
 

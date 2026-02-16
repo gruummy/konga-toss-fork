@@ -9,7 +9,7 @@ const unirest = require('unirest')
 const cron = require('node-cron');
 const moment = require('moment')
 const hcmailer = require('nodemailer');
-const mg = require('nodemailer-mailgun-transport');
+// const mg = require('nodemailer-mailgun-transport'); // DISABLED - see under-review/mailgun/
 const notificationsInterval = 15;
 const KongService = require('../services/KongService');
 const sendmail = require('sendmail')({
@@ -145,20 +145,26 @@ module.exports = {
                 settings : settings.data,
             }
 
+            // Guard against disabled transports
+            if (settings.data.default_transport === 'mailgun') {
+                sails.log.error('ERROR: Email transport "mailgun" is DISABLED (see under-review/mailgun/README.md)');
+                return cb(new Error('Email transport "mailgun" is disabled. Use smtp or sendmail.'));
+            }
+
             switch(settings.data.default_transport) {
                 case "smtp":
                     result.transporter = hcmailer.createTransport(transport.settings)
                     break;
-                case "mailgun":
-                    sails.log("Upstream health:createTransporter:transport is mailgun");
-                    sails.log(`[api_key]=>`, _.get(transport,'settings.auth.api_key'));
-                    sails.log(`[domain]=>`, _.get(transport,'settings.auth.domain'));
-                    if(!_.get(transport,'settings.auth.api_key') || !_.get(transport,'settings.auth.domain')) {
-                        result.transporter = null;
-                    }else{
-                        result.transporter = hcmailer.createTransport(mg(transport.settings))
-                    }
-                    break;
+                // case "mailgun": // DISABLED - see under-review/mailgun/
+                //     sails.log("Upstream health:createTransporter:transport is mailgun");
+                //     sails.log(`[api_key]=>`, _.get(transport,'settings.auth.api_key'));
+                //     sails.log(`[domain]=>`, _.get(transport,'settings.auth.domain'));
+                //     if(!_.get(transport,'settings.auth.api_key') || !_.get(transport,'settings.auth.domain')) {
+                //         result.transporter = null;
+                //     }else{
+                //         result.transporter = hcmailer.createTransport(mg(transport.settings))
+                //     }
+                //     break;
             }
 
             return cb(null,result);

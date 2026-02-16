@@ -3,7 +3,7 @@
 var events = require('events');
 var eventEmitter = new events.EventEmitter();
 var nodemailer = require('nodemailer');
-var mg = require('nodemailer-mailgun-transport');
+// var mg = require('nodemailer-mailgun-transport'); // DISABLED - see under-review/mailgun/
 var sendmail = require('sendmail')({
     logger: {
         debug: sails.log,
@@ -45,13 +45,30 @@ module.exports = {
                         settings : settings[0].data,
                     }
 
+                    // Guard against disabled transports
+                    if (settings[0].data.default_transport === 'mailgun') {
+                        sails.log.error('============================================================');
+                        sails.log.error('ERROR: Email transport "mailgun" is currently DISABLED');
+                        sails.log.error('============================================================');
+                        sails.log.error('Reason: Security vulnerabilities in nodemailer-mailgun-transport');
+                        sails.log.error('');
+                        sails.log.error('Supported transports:');
+                        sails.log.error('  - smtp (recommended)');
+                        sails.log.error('  - sendmail');
+                        sails.log.error('');
+                        sails.log.error('For more information see: under-review/mailgun/README.md');
+                        sails.log.error('To use Mailgun via SMTP: Configure SMTP transport with Mailgun credentials');
+                        sails.log.error('============================================================');
+                        return cb(new Error('Email transport "mailgun" is disabled. Use smtp or sendmail.'));
+                    }
+
                     switch(settings[0].data.default_transport) {
                         case "smtp":
                             result.transporter = nodemailer.createTransport(transport.settings)
                             break;
-                        case "mailgun":
-                            result.transporter = nodemailer.createTransport(mg(transport.settings))
-                            break;
+                        // case "mailgun": // DISABLED - see under-review/mailgun/
+                        //     result.transporter = nodemailer.createTransport(mg(transport.settings))
+                        //     break;
                     }
 
                     return cb(null,result);
