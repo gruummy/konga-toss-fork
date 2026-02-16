@@ -38,10 +38,9 @@
     "mkdirp": "^0.5.5",
     "moment": "^2.25.1",
     "node-cron": "^1.2.1",
-    "node-sass": "^4.13.1",
-    "nodemailer": "^4.7.0",
+    "nodemailer": "^8.0.1",
     "nodemailer-mailgun-transport": "^1.4.0",
-    "passport": "0.3.0",
+    "passport": "^0.7.0",
     "passport-ldapauth": "^2.1.4",
     "passport-local": "1.0.0",
     "rc": "^1.2.8",
@@ -55,10 +54,11 @@
     "validator": "4.2.1"
   },
   "devDependencies": {
-    "chai": "3.4.0",
-    "mocha": "^5.2.0",
+    "chai": "^4.5.0",
+    "mocha": "^9.2.2",
+    "sass": "^1.97.3",
     "should": "7.1.1",
-    "supertest": "1.1.0"
+    "supertest": "^6.3.4"
   },
   "scripts": {
     "postinstall": "bower --allow-root install",
