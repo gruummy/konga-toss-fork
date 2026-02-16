@@ -1,6 +1,7 @@
 'use strict';
 
-var unirest = require("unirest")
+const axios = require("axios");
+const FormData = require("form-data")
 var async = require('async')
 var fs = require('fs')
 var path = require('path')
@@ -30,44 +31,60 @@ var KongPluginService = _.merge(_.cloneDeep(require('./KongService')), {
   },
 
   addDynamicSSLPlugin: function (fds, req, res) {
-    return unirest.post(req.connection.kong_admin_url + req.url.replace('/kong', ''))
-      .headers({'Content-Type': 'multipart/form-data'})
-      .field('name', req.body.name)
-      .field('config.only_https', req.body['config.only_https'] || false)
-      .field('config.accept_http_if_already_terminated', req.body['config.accept_http_if_already_terminated'] || false)
-      .attach('config.cert', fds[0])
-      .attach('config.key', fds[1])
-      .end(function (response) {
-        if (response.error) return res.kongError(response)
-        return res.json(response.body)
+    const formData = new FormData();
+    formData.append('name', req.body.name);
+    formData.append('config.only_https', req.body['config.only_https'] || false);
+    formData.append('config.accept_http_if_already_terminated', req.body['config.accept_http_if_already_terminated'] || false);
+    formData.append('config.cert', fds[0], 'cert.pem');
+    formData.append('config.key', fds[1], 'key.pem');
+
+    return axios.post(req.connection.kong_admin_url + req.url.replace('/kong', ''), formData, {
+      headers: formData.getHeaders()
+    })
+      .then(function (response) {
+        return res.json(response.data)
+      })
+      .catch(function (error) {
+        return res.kongError(error.response || error)
       });
   },
 
   addCertificates: function (fds, req, res) {
-    var request = unirest.post(req.connection.kong_admin_url + req.url.replace('/kong', ''))
+    const formData = new FormData();
+    formData.append('snis', req.body['snis'] || '');
+    formData.append('cert', fds[0], 'cert.pem');
+    formData.append('key', fds[1], 'key.pem');
 
-    request.headers(KongService.headers(req.connection));
-    request.field('snis', req.body['snis'] || '')
-    request.attach('cert', fds[0])
-    request.attach('key', fds[1])
-    return request.end(function (response) {
-      if (response.error) return res.kongError(response)
-      return res.json(response.body)
-    });
+    const headers = Object.assign({}, KongService.headers(req.connection), formData.getHeaders());
+
+    return axios.post(req.connection.kong_admin_url + req.url.replace('/kong', ''), formData, {
+      headers: headers
+    })
+      .then(function (response) {
+        return res.json(response.data)
+      })
+      .catch(function (error) {
+        return res.kongError(error.response || error)
+      });
   },
 
   updateCertificates: function (fds, req, res) {
-    var request = unirest.patch(req.connection.kong_admin_url + req.url.replace('/kong', ''))
-    request.headers(KongService.headers(req.connection));
+    const formData = new FormData();
+    formData.append('snis', req.body['snis'] || '');
+    if (fds[0]) formData.append('cert', fds[0], 'cert.pem');
+    if (fds[1]) formData.append('key', fds[1], 'key.pem');
 
-    request.field('snis', req.body['snis'] || '')
-    if (fds[0]) request.attach('cert', fds[0])
-    if (fds[1]) request.attach('key', fds[1])
+    const headers = Object.assign({}, KongService.headers(req.connection), formData.getHeaders());
 
-    return request.end(function (response) {
-      if (response.error) return res.kongError(response)
-      return res.json(response.body)
-    });
+    return axios.patch(req.connection.kong_admin_url + req.url.replace('/kong', ''), formData, {
+      headers: headers
+    })
+      .then(function (response) {
+        return res.json(response.data)
+      })
+      .catch(function (error) {
+        return res.kongError(error.response || error)
+      });
 
   },
 

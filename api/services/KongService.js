@@ -1,6 +1,6 @@
 'use strict';
 
-const unirest = require("unirest")
+const axios = require("axios");
 const ApiHealthCheckService = require('../services/ApiHealthCheckService')
 const JWT = require("./Token");
 const Utils = require('../helpers/utils');
@@ -50,53 +50,65 @@ var KongService = {
 
   create: function (req, res) {
 
-    unirest.post(Utils.withoutTrailingSlash(req.connection.kong_admin_url) + req.url.replace('/kong', ''))
-      .headers(KongService.headers(req, true))
-      .send(req.body)
-      .end(function (response) {
-        if (response.error) return res.kongError(response);
-        return res.json(response.body);
+    axios.post(Utils.withoutTrailingSlash(req.connection.kong_admin_url) + req.url.replace('/kong', ''), req.body, {
+      headers: KongService.headers(req, true)
+    })
+      .then(function (response) {
+        return res.json(response.data);
+      })
+      .catch(function (error) {
+        return res.kongError(error.response || error);
       });
   },
 
   createCb: function (req, res, cb) {
 
-    unirest.post(Utils.withoutTrailingSlash(req.connection.kong_admin_url) + req.url.replace('/kong', ''))
-      .headers(KongService.headers(req, true))
-      .send(req.body)
-      .end(function (response) {
-        if (response.error) return cb(response);
-        return cb(null, response.body);
+    axios.post(Utils.withoutTrailingSlash(req.connection.kong_admin_url) + req.url.replace('/kong', ''), req.body, {
+      headers: KongService.headers(req, true)
+    })
+      .then(function (response) {
+        return cb(null, response.data);
+      })
+      .catch(function (error) {
+        return cb(error.response || error);
       });
   },
 
   createFromEndpointCb: function (endpoint, data, req, cb) {
 
-    unirest.post(Utils.withoutTrailingSlash(req.connection.kong_admin_url) + endpoint)
-      .headers(KongService.headers(req, true))
-      .send(data)
-      .end(function (response) {
-        if (response.error) return cb(response)
-        return cb(null, response.body)
+    axios.post(Utils.withoutTrailingSlash(req.connection.kong_admin_url) + endpoint, data, {
+      headers: KongService.headers(req, true)
+    })
+      .then(function (response) {
+        return cb(null, response.data);
+      })
+      .catch(function (error) {
+        return cb(error.response || error);
       });
   },
 
   deleteFromEndpointCb: function (endpoint, req, cb) {
     sails.log('Deleting ' + Utils.withoutTrailingSlash(req.connection.kong_admin_url) + endpoint);
-    unirest.delete(Utils.withoutTrailingSlash(req.connection.kong_admin_url) + endpoint)
-      .headers(KongService.headers(req, true))
-      .end(function (response) {
-        if (response.error) return cb(response)
-        return cb(null, response.body)
+    axios.delete(Utils.withoutTrailingSlash(req.connection.kong_admin_url) + endpoint, {
+      headers: KongService.headers(req, true)
+    })
+      .then(function (response) {
+        return cb(null, response.data);
+      })
+      .catch(function (error) {
+        return cb(error.response || error);
       });
   },
 
   retrieve: function (req, res) {
-    unirest.get(Utils.withoutTrailingSlash(req.connection.kong_admin_url) + req.url.replace('/kong', ''))
-      .headers(KongService.headers(req, true))
-      .end(function (response) {
-        if (response.error) return res.kongError(response);
-        return res.json(response.body);
+    axios.get(Utils.withoutTrailingSlash(req.connection.kong_admin_url) + req.url.replace('/kong', ''), {
+      headers: KongService.headers(req, true)
+    })
+      .then(function (response) {
+        return res.json(response.data);
+      })
+      .catch(function (error) {
+        return res.kongError(error.response || error);
       });
   },
 
@@ -123,30 +135,39 @@ var KongService = {
 
   nodeStatus: function (node, cb) {
 
-    unirest.get(Utils.withoutTrailingSlash(node.kong_admin_url) + "/status")
-      .headers(KongService.headers(node, true))
-      .end(function (response) {
-        if (response.error) return cb(response);
-        return cb(null, response.body);
+    axios.get(Utils.withoutTrailingSlash(node.kong_admin_url) + "/status", {
+      headers: KongService.headers(node, true)
+    })
+      .then(function (response) {
+        return cb(null, response.data);
+      })
+      .catch(function (error) {
+        return cb(error.response || error);
       });
   },
 
   nodeInfo: function (node, cb) {
-    unirest.get(Utils.withoutTrailingSlash(node.kong_admin_url))
-      .headers(KongService.headers(node, true))
-      .end(function (response) {
-        if (response.error) return cb(response);
-        return cb(null, response.body);
+    axios.get(Utils.withoutTrailingSlash(node.kong_admin_url), {
+      headers: KongService.headers(node, true)
+    })
+      .then(function (response) {
+        return cb(null, response.data);
+      })
+      .catch(function (error) {
+        return cb(error.response || error);
       });
   },
 
   info: function (connection) {
     return new Promise((resolve, reject) => {
-      unirest.get(Utils.withoutTrailingSlash(connection.kong_admin_url))
-        .headers(KongService.headers(connection, true))
-        .end(function (response) {
-          if (response.error) return reject(response);
-          return resolve(response.body);
+      axios.get(Utils.withoutTrailingSlash(connection.kong_admin_url), {
+        headers: KongService.headers(connection, true)
+      })
+        .then(function (response) {
+          return resolve(response.data);
+        })
+        .catch(function (error) {
+          return reject(error.response || error);
         });
     });
   },
@@ -161,18 +182,18 @@ var KongService = {
 
     sails.log.debug('KongService: listAllCb', url);
     var getData = function (previousData, url) {
-      unirest.get(url)
-        .headers(KongService.headers(req, true))
-        .end(function (response) {
-          if (response.error) return cb(response)
-          var data = previousData.concat(_.get(response, 'body.data', []));
-          if (_.get(response, 'body.next')) {
-            getData(data, (Utils.withoutTrailingSlash(req.kong_admin_url) || Utils.withoutTrailingSlash(req.connection.kong_admin_url)) + response.body.next);
+      axios.get(url, {
+        headers: KongService.headers(req, true)
+      })
+        .then(function (response) {
+          var data = previousData.concat(_.get(response, 'data.data', []));
+          if (_.get(response, 'data.next')) {
+            getData(data, (Utils.withoutTrailingSlash(req.kong_admin_url) || Utils.withoutTrailingSlash(req.connection.kong_admin_url)) + response.data.next);
           }
           else {
             try {
-              response.body.data = data;
-              ProxyHooks.afterEntityList(endpoint.replace('/', '').split('?')[0], req, response.body, (err, finalData) => {
+              response.data.data = data;
+              ProxyHooks.afterEntityList(endpoint.replace('/', '').split('?')[0], req, response.data, (err, finalData) => {
                 if (err) return cb(err);
                 return cb(null, finalData)
               })
@@ -183,6 +204,9 @@ var KongService = {
             }
 
           }
+        })
+        .catch(function (error) {
+          return cb(error.response || error);
         });
     };
     getData([], `${url}`);
@@ -190,77 +214,86 @@ var KongService = {
 
   list: function (req, res) {
     var getData = function (previousData, url) {
-      unirest.get(url)
-        .headers(KongService.headers(req, true))
-        .end(function (response) {
-          if (response.error) return res.kongError(response)
-          var apis = previousData.concat(response.body.data);
-          if (response.body.next) {
-            getData(apis, response.body.next);
+      axios.get(url, {
+        headers: KongService.headers(req, true)
+      })
+        .then(function (response) {
+          var apis = previousData.concat(response.data.data);
+          if (response.data.next) {
+            getData(apis, response.data.next);
           }
           else {
-            response.body.data = apis;
-            return res.json(response.body);
+            response.data.data = apis;
+            return res.json(response.data);
           }
+        })
+        .catch(function (error) {
+          return res.kongError(error.response || error);
         });
     };
     getData([], (Utils.withoutTrailingSlash(req.kong_admin_url) || Utils.withoutTrailingSlash(req.connection.kong_admin_url)) + req.url.replace('/kong', ''));
   },
 
   update: function (req, res) {
-    unirest.patch(Utils.withoutTrailingSlash(req.connection.kong_admin_url) + req.url.replace('/kong', ''))
-      .headers(KongService.headers(req, true))
-      .send(req.body)
-      .end(function (response) {
-        if (response.error) return res.kongError(response);
+    axios.patch(Utils.withoutTrailingSlash(req.connection.kong_admin_url) + req.url.replace('/kong', ''), req.body, {
+      headers: KongService.headers(req, true)
+    })
+      .then(function (response) {
 
         if (req.url.indexOf("/kong/apis") > -1) {
           // If api was updated, update its health checks as well
           ApiHealthCheckService.updateCb({
-            api_id: response.body.id
-          }, {api: response.body}, function (err, updated) {
+            api_id: response.data.id
+          }, {api: response.data}, function (err, updated) {
           });
         }
 
-        return res.json(response.body);
+        return res.json(response.data);
+      })
+      .catch(function (error) {
+        return res.kongError(error.response || error);
       });
   },
 
   updateCb: function (req, res, cb) {
-    unirest.patch(Utils.withoutTrailingSlash(req.connection.kong_admin_url) + req.url.replace('/kong', ''))
-      .headers(KongService.headers(req, true))
-      .send(req.body)
-      .end(function (response) {
-        if (response.error) return cb(response);
+    axios.patch(Utils.withoutTrailingSlash(req.connection.kong_admin_url) + req.url.replace('/kong', ''), req.body, {
+      headers: KongService.headers(req, true)
+    })
+      .then(function (response) {
 
         if (req.url.indexOf("/kong/apis") > -1) {
           // If api was updated, update its health checks as well
           // If api was updated, update its health checks as well
           ApiHealthCheckService.updateCb({
-            api_id: response.body.id
-          }, {api: response.body}, function (err, updated) {
+            api_id: response.data.id
+          }, {api: response.data}, function (err, updated) {
           });
         }
 
-        return cb(null, response.body);
+        return cb(null, response.data);
+      })
+      .catch(function (error) {
+        return cb(error.response || error);
       });
   },
 
   updateOrCreate: function (req, res) {
-    unirest.put(Utils.withoutTrailingSlash(req.connection.kong_admin_url) + req.url.replace('/kong', ''))
-      .headers(KongService.headers(req, true))
-      .send(req.body)
-      .end(function (response) {
-        if (response.error) return res.kongError(response);
-        return res.json(response.body);
+    axios.put(Utils.withoutTrailingSlash(req.connection.kong_admin_url) + req.url.replace('/kong', ''), req.body, {
+      headers: KongService.headers(req, true)
+    })
+      .then(function (response) {
+        return res.json(response.data);
+      })
+      .catch(function (error) {
+        return res.kongError(error.response || error);
       });
   },
 
   delete: function (req, res) {
-    unirest.delete(Utils.withoutTrailingSlash(req.connection.kong_admin_url) + req.url.replace('/kong', ''))
-      .headers(KongService.headers(req, true))
-      .end(function (response) {
-        if (response.error) return res.kongError(response);
+    axios.delete(Utils.withoutTrailingSlash(req.connection.kong_admin_url) + req.url.replace('/kong', ''), {
+      headers: KongService.headers(req, true)
+    })
+      .then(function (response) {
 
         if (req.url.indexOf("/kong/apis") > -1) {
           // If api was deleted, delete its health checks as well
@@ -273,19 +306,22 @@ var KongService = {
           });
         }
 
-        return res.json(response.body);
+        return res.json(response.data);
       })
+      .catch(function (error) {
+        return res.kongError(error.response || error);
+      });
   },
 
   deleteCb: function (req, res, cb) {
-    unirest.delete(Utils.withoutTrailingSlash(req.connection.kong_admin_url) + req.url.replace('/kong', ''))
-      .headers(KongService.headers(req, true))
-      .end(function (response) {
-        if (response.error) return cb(response);
+    axios.delete(Utils.withoutTrailingSlash(req.connection.kong_admin_url) + req.url.replace('/kong', ''), {
+      headers: KongService.headers(req, true)
+    })
+      .then(function (response) {
 
         if (req.url.indexOf("/kong/apis") > -1) {
           // If api was deleted, delete its health checks as well
-          var id = req.url.pop() || req.url.pop();  // handle potential trailing slash
+          var id = req. url.pop() || req.url.pop();  // handle potential trailing slash
 
           ApiHealthCheckService.deleteCb({
             api_id: id
@@ -293,19 +329,24 @@ var KongService = {
           });
         }
 
-        return cb(null, response.body);
+        return cb(null, response.data);
+      })
+      .catch(function (error) {
+        return cb(error.response || error);
       });
   },
 
   put: function (url, connection, data) {
     // sails.log("KongService.put called() =>", url, connection, data);
     return new Promise((resolve, reject) => {
-      unirest.put(Utils.withoutTrailingSlash(connection.kong_admin_url) +url.replace('/kong', ''))
-        .headers(KongService.headers(connection, true))
-        .send(data)
-        .end(function (response) {
-          if (response.error) return reject(response);
-          return resolve(response.body);
+      axios.put(Utils.withoutTrailingSlash(connection.kong_admin_url) +url.replace('/kong', ''), data, {
+        headers: KongService.headers(connection, true)
+      })
+        .then(function (response) {
+          return resolve(response.data);
+        })
+        .catch(function (error) {
+          return reject(error.response || error);
         });
     })
   },
@@ -313,12 +354,14 @@ var KongService = {
   post: function (url, connection, data) {
     // sails.log("KongService.put called() =>", url, connection, data);
     return new Promise((resolve, reject) => {
-      unirest.post(Utils.withoutTrailingSlash(connection.kong_admin_url) +url.replace('/kong', ''))
-        .headers(KongService.headers(connection, true))
-        .send(data)
-        .end(function (response) {
-          if (response.error) return reject(response);
-          return resolve(response.body);
+      axios.post(Utils.withoutTrailingSlash(connection.kong_admin_url) +url.replace('/kong', ''), data, {
+        headers: KongService.headers(connection, true)
+      })
+        .then(function (response) {
+          return resolve(response.data);
+        })
+        .catch(function (error) {
+          return reject(error.response || error);
         });
     })
   },

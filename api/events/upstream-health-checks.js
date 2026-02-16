@@ -5,7 +5,7 @@
 const events = require('events');
 const _ = require('lodash');
 const eventEmitter = new events.EventEmitter();
-const unirest = require('unirest')
+const axios = require('axios');
 const cron = require('node-cron');
 const moment = require('moment')
 const hcmailer = require('nodemailer');
@@ -314,16 +314,14 @@ module.exports = {
             return false;
         }
 
-        unirest.post(hc.notification_endpoint)
-            .header('Content-Type', 'application/json')
-            .send(hc.api)
-            .end(function (response) {
-                if (response.error)  {
-                    sails.log("api_Upstream health:notifyNotificationEndpoint => Failed to notify notification endpoint",response.error)
-                }else{
-                    sails.log("api_Upstream health:notifyNotificationEndpoint => Succeeded to notify notification endpoint")
-                }
-
+        axios.post(hc.notification_endpoint, hc.api, {
+            headers: {'Content-Type': 'application/json'}
+        })
+            .then(function (response) {
+                sails.log("api_Upstream health:notifyNotificationEndpoint => Succeeded to notify notification endpoint")
+            })
+            .catch(function (error) {
+                sails.log("api_Upstream health:notifyNotificationEndpoint => Failed to notify notification endpoint", error.message)
             })
     },
 

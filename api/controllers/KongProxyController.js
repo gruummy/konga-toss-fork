@@ -2,7 +2,6 @@
  * RemoteApiController
  */
 
-var unirest = require("unirest");
 var KongService = require("../services/KongService");
 var ProxyHooks = require("../services/KongProxyHooks");
 var _ = require("lodash");
